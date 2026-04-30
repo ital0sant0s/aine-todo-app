@@ -1,5 +1,5 @@
 # generated: 2026-04-30T01:29:45Z
-# last_updated: 2026-04-30T01:52:24Z
+# last_updated: 2026-04-30T21:05:00Z
 # project: aine-todo-app-v3
 # project_key: NOKEY
 # tracking_system: file-system
@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-30T01:29:45Z
-last_updated: 2026-04-30T19:00:00Z
+last_updated: 2026-04-30T21:05:00Z
 project: aine-todo-app-v3
 project_key: NOKEY
 tracking_system: file-system
@@ -48,8 +48,8 @@ development_status:
   1-3-build-todo-list-and-create-flow-in-the-ui: done
   1-4-implement-complete-and-delete-todo-interactions: done
   epic-1-retrospective: optional
-  epic-2: backlog
-  2-1-implement-initial-load-states-and-retryable-error-handling: backlog
+  epic-2: in-progress
+  2-1-implement-initial-load-states-and-retryable-error-handling: in-progress
   2-2-implement-mutation-error-feedback-and-latency-aware-ui-updates: backlog
   2-3-deliver-responsive-and-accessible-main-todo-flow: backlog
   epic-2-retrospective: optional
