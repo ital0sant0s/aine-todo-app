@@ -53,7 +53,9 @@ NFR-005: All interactive controls in main todo flow shall be keyboard operable a
 
 ### UX Design Requirements
 
-No UX design specification document was included in this analysis set.
+UX design specification is included and is the source-of-truth for UX intent:
+- `/Users/italosantos/projects/nearform/ogcio/aine-todo-app-v3/_bmad-output/planning-artifacts/ux-design-specification.md`
+Key aligned UX expectations include explicit loading/empty/error/list states, responsive usability from 360px to 1440px, non-blocking error recovery, and keyboard-accessible controls.
 
 ### FR Coverage Map
 
@@ -103,6 +105,10 @@ So that todo features can be built on a durable and reproducible baseline.
 **When** migrations are created and applied
 **Then** the `todos` table exists with required constraints including description length and non-null rules
 **And** `completed` defaults to `false`
+
+**Sizing Note (optional split if sprint capacity is tight):**
+- Story 1.1A: Project scaffold and baseline runtime/tooling setup.
+- Story 1.1B: Prisma schema, migration creation, and DB verification.
 
 ### Story 1.2: Implement Todo CRUD API with Validation and Error Contract
 
@@ -195,13 +201,15 @@ So that I can trust the system response.
 
 **Given** create/toggle/delete actions succeed
 **When** API responses are returned
-**Then** UI updates are visible within 300ms under normal local QA conditions
+**Then** UI updates are visible within 300ms measured from response receipt to DOM update timestamp in integration tests
+**And** the latency assertion passes for 95/100 local test iterations per mutation type (create/toggle/delete)
 **And** interaction states are consistent with server state
 
 **Given** create/toggle/delete actions fail
 **When** API errors are returned
 **Then** a non-blocking, user-readable error message is displayed
-**And** the interface remains usable for subsequent actions
+**And** the error message includes operation context (`create`, `toggle`, or `delete`) and recovery guidance
+**And** the interface remains usable for subsequent actions without page reload
 
 ### Story 2.3: Deliver Responsive and Accessible Main Todo Flow
 
@@ -212,11 +220,12 @@ So that I can use it effectively on mobile and desktop.
 **Acceptance Criteria:**
 
 **Given** viewport widths between 360px and 1440px
-**When** I use the main todo flow
-**Then** layout and controls remain usable without horizontal overflow in standard scenarios
-**And** key interactions remain reachable and legible
+**When** I use the main todo flow at 360px, 768px, 1024px, and 1440px
+**Then** no horizontal scrollbar appears on the page
+**And** create/toggle/delete controls remain visible, reachable, and operable at each viewport
 
 **Given** keyboard-only navigation
 **When** I tab through create, toggle, and delete controls
 **Then** all interactive elements are reachable and operable
 **And** controls expose accessible labels and visible focus indicators
+**And** automated accessibility checks report zero critical violations for the main todo flow pages
