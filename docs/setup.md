@@ -24,7 +24,7 @@ npm install
 npx prisma migrate dev --name init_todo_model
 ```
 
-## Validate Prisma client and schema
+## Generate Prisma client
 
 ```bash
 npm run db:generate

@@ -7,7 +7,7 @@
     "build": "next build",
     "check": "next lint && tsc --noEmit",
     "db:check:todo-default": "node scripts/check-todo-default.mjs",
-    "db:generate": "prisma migrate dev",
+    "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",

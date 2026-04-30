@@ -27,6 +27,11 @@ so that todo features can be built on a durable and reproducible baseline.
 - [x] Verify created table and columns in local Postgres.
 - [x] Add/update setup docs with run and migration commands (`docs/setup.md`).
 
+### Review Follow-ups (AI)
+
+- [x] [AI-Review][High] Fix `db:generate` to run `prisma generate` instead of `prisma migrate dev` and align setup docs.
+- [x] [AI-Review][Medium] Make `start-database.sh` idempotent by checking existing/running project container before generic port conflict checks.
+
 ## Dev Notes
 
 - Use REST-first architecture and keep frontend-backend separation clean from the start. [Source: _bmad-output/planning-artifacts/architecture.md#Core Architectural Decisions]
@@ -83,6 +88,8 @@ GPT-5 Codex
 - Added an integration check script that verifies persisted default `completed=false`.
 - Added `docs/setup.md` with install, database, migration, validation, and run commands.
 - Story implementation completed and moved to `review`.
+- Resolved review finding [High]: corrected `db:generate` to run `prisma generate` and updated docs wording.
+- Resolved review finding [Medium]: reordered `start-database.sh` checks to return success when the project DB container is already running.
 
 ### File List
 
@@ -115,3 +122,14 @@ GPT-5 Codex
 ## Change Log
 
 - 2026-04-30: Implemented Story 1.1 foundation, Prisma Todo schema, migration, DB integration check, and setup documentation.
+- 2026-04-30: Addressed code review findings (2 resolved: 1 High, 1 Medium).
+
+## Senior Developer Review (AI)
+
+- Outcome: Changes Requested -> Addressed
+- Review Date: 2026-04-30
+
+### Action Items
+
+- [x] [High] `db:generate` script changed to `prisma generate`; setup docs aligned.
+- [x] [Medium] `start-database.sh` made idempotent for already-running project DB containers.
