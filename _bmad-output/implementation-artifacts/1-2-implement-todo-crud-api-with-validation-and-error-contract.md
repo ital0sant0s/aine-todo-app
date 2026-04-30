@@ -1,6 +1,6 @@
 # Story 1.2: Implement Todo CRUD API with Validation and Error Contract
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -17,24 +17,24 @@ so that create/view/update/delete actions behave consistently and persist data.
 
 ## Tasks / Subtasks
 
-- [ ] Add REST API endpoints for todos:
-- [ ] `POST /api/todos` (create)
-- [ ] `GET /api/todos` (list newest-first by `created_at`)
-- [ ] `PATCH /api/todos/:id` (toggle/update completion)
-- [ ] `DELETE /api/todos/:id` (delete)
-- [ ] Define and enforce request validation for:
-- [ ] `description` required, trimmed length 1..200
-- [ ] valid numeric `id` path parameter
-- [ ] valid boolean payload where applicable
-- [ ] Implement consistent JSON response envelope:
-- [ ] success: `{ "data": ... }`
-- [ ] failure: `{ "error": { "code": "...", "message": "...", "details": [...] } }`
-- [ ] Map core error types to HTTP statuses:
-- [ ] validation errors -> `400`
-- [ ] not found -> `404`
-- [ ] unexpected server failures -> `500`
-- [ ] Add automated tests for CRUD route behavior, persistence, and error contract.
-- [ ] Update documentation with endpoint contracts and examples.
+- [x] Add REST API endpoints for todos:
+- [x] `POST /api/todos` (create)
+- [x] `GET /api/todos` (list newest-first by `created_at`)
+- [x] `PATCH /api/todos/:id` (toggle/update completion)
+- [x] `DELETE /api/todos/:id` (delete)
+- [x] Define and enforce request validation for:
+- [x] `description` required, trimmed length 1..200
+- [x] valid numeric `id` path parameter
+- [x] valid boolean payload where applicable
+- [x] Implement consistent JSON response envelope:
+- [x] success: `{ "data": ... }`
+- [x] failure: `{ "error": { "code": "...", "message": "...", "details": [...] } }`
+- [x] Map core error types to HTTP statuses:
+- [x] validation errors -> `400`
+- [x] not found -> `404`
+- [x] unexpected server failures -> `500`
+- [x] Add automated tests for CRUD route behavior, persistence, and error contract.
+- [x] Update documentation with endpoint contracts and examples.
 
 ## Dev Notes
 
@@ -88,16 +88,36 @@ GPT-5 Codex
 ### Debug Log References
 
 - Created via `bmad-create-story` after Story 1.1 marked done.
+- Implemented API handlers, validation, error mapping, and tests.
+- Validation commands executed: `npm test`, `npm run lint`, `npm run typecheck`.
 
 ### Completion Notes List
 
 - Comprehensive context generated for API CRUD, validation, and error contract implementation.
 - Story status set to `ready-for-dev`.
+- Implemented `POST/GET/PATCH/DELETE` todo API routes with deterministic list ordering and persistence semantics.
+- Added strict API-boundary validation for body and path params, plus consistent success/error response envelopes.
+- Added automated API behavior tests (CRUD, validation failures, not-found handling, and contract checks).
+- Added endpoint contract documentation and examples in `docs/api.md`.
+- Full validation passed: tests, lint, and typecheck.
 
 ### File List
 
 - _bmad-output/implementation-artifacts/1-2-implement-todo-crud-api-with-validation-and-error-contract.md
+- src/pages/api/todos/index.js
+- src/pages/api/todos/[id].js
+- src/server/api/envelope.js
+- src/server/api/errors.js
+- src/server/api/http.js
+- src/server/todos/handlers.js
+- src/server/todos/prisma-repository.js
+- src/server/todos/serializer.js
+- src/server/todos/validation.js
+- tests/todos-api.test.js
+- docs/api.md
+- package.json
 
 ## Change Log
 
 - 2026-04-30: Created Story 1.2 context file and prepared it for development.
+- 2026-04-30: Implemented todo CRUD API, validation/error contract, automated tests, and API contract documentation; moved story to `review`.
