@@ -1,6 +1,6 @@
 # Story 2.1: Implement Initial Load States and Retryable Error Handling
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -120,3 +120,4 @@ Composer (Cursor agent)
 
 - 2026-04-30: Story authored via `bmad-create-story`; sprint tracking set to ready-for-dev for `2-1-implement-initial-load-states-and-retryable-error-handling`; epic-2 activated to in-progress.
 - 2026-04-30: Implemented initial-load retry, region semantics, and tests; story set to review per dev-story completion.
+- 2026-04-30: BMAD code-review (adversarial layers + AC audit): no patch or decision items; story marked done and sprint synced.
