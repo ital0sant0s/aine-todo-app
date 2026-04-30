@@ -49,13 +49,20 @@ export const validateTodoDescription = (rawDescription) => {
 
 /**
  * @param {Todo[]} todos
+ * @returns {Todo[]}
+ */
+export const sortTodosNewestFirst = (todos) =>
+  [...todos].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
+
+/**
+ * @param {Todo[]} todos
  * @param {Todo} todo
  * @returns {Todo[]}
  */
 export const insertTodoNewestFirst = (todos, todo) =>
-  [...todos, todo].sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-  );
+  sortTodosNewestFirst([...todos, todo]);
 
 /**
  * @param {typeof fetch} [fetchImpl]
@@ -89,6 +96,47 @@ export const createTodo = async (rawDescription, fetchImpl = fetch) => {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ description: validation.value }),
+  });
+  const payload = await response.json();
+
+  if (!response.ok) {
+    throw new Error(parseErrorMessage(payload));
+  }
+
+  return payload.data;
+};
+
+/**
+ * @param {number} id
+ * @param {boolean} completed
+ * @param {typeof fetch} [fetchImpl]
+ * @returns {Promise<Todo>}
+ */
+export const updateTodoCompleted = async (id, completed, fetchImpl = fetch) => {
+  const response = await fetchImpl(`/api/todos/${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ completed }),
+  });
+  const payload = await response.json();
+
+  if (!response.ok) {
+    throw new Error(parseErrorMessage(payload));
+  }
+
+  return payload.data;
+};
+
+/**
+ * @param {number} id
+ * @param {typeof fetch} [fetchImpl]
+ * @returns {Promise<{ id: number }>}
+ */
+export const deleteTodo = async (id, fetchImpl = fetch) => {
+  const response = await fetchImpl(`/api/todos/${id}`, {
+    method: "DELETE",
   });
   const payload = await response.json();
 

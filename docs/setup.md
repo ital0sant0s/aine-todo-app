@@ -44,7 +44,7 @@ This check inserts a todo without explicitly setting `completed` and verifies pe
 npm run dev
 ```
 
-## Verify UI list and create flow
+## Verify UI list, create flow, complete, and delete
 
 1. Open `http://localhost:3000`.
 2. Create a todo and confirm:
@@ -52,3 +52,5 @@ npm run dev
 - newest items render first
 - input clears after successful submit
 3. Submit empty/whitespace-only/over-limit text and confirm inline validation feedback is shown.
+4. Use the checkbox on a todo to mark it complete or incomplete and confirm styling updates; refresh and confirm the state matches the server.
+5. Use Delete on a todo and confirm it disappears immediately; refresh and confirm it stays removed.

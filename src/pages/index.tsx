@@ -4,8 +4,11 @@ import type { FormEvent } from "react";
 
 import {
   createTodo,
+  deleteTodo,
   fetchTodos,
   insertTodoNewestFirst,
+  sortTodosNewestFirst,
+  updateTodoCompleted,
   validateTodoDescription,
 } from "~/features/todos/client.js";
 
@@ -24,6 +27,10 @@ export default function Home() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [createError, setCreateError] = useState<string | null>(null);
+  const [togglePendingById, setTogglePendingById] = useState<Record<number, boolean>>({});
+  const [deletePendingById, setDeletePendingById] = useState<Record<number, boolean>>({});
+  const [toggleErrorById, setToggleErrorById] = useState<Record<number, string>>({});
+  const [deleteErrorById, setDeleteErrorById] = useState<Record<number, string>>({});
 
   useEffect(() => {
     let mounted = true;
@@ -83,6 +90,54 @@ export default function Home() {
       setCreateError(message);
     } finally {
       setIsCreating(false);
+    }
+  };
+
+  const handleToggleCompleted = async (todo: Todo) => {
+    setToggleErrorById((current) => {
+      const next = { ...current };
+      delete next[todo.id];
+      return next;
+    });
+    setTogglePendingById((current) => ({ ...current, [todo.id]: true }));
+    try {
+      const updated = await updateTodoCompleted(todo.id, !todo.completed);
+      setTodos((current) =>
+        sortTodosNewestFirst(current.map((t) => (t.id === updated.id ? updated : t))),
+      );
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Could not update todo. Try again.";
+      setToggleErrorById((current) => ({ ...current, [todo.id]: message }));
+    } finally {
+      setTogglePendingById((current) => {
+        const next = { ...current };
+        delete next[todo.id];
+        return next;
+      });
+    }
+  };
+
+  const handleDeleteTodo = async (todo: Todo) => {
+    setDeleteErrorById((current) => {
+      const next = { ...current };
+      delete next[todo.id];
+      return next;
+    });
+    setDeletePendingById((current) => ({ ...current, [todo.id]: true }));
+    try {
+      await deleteTodo(todo.id);
+      setTodos((current) => current.filter((t) => t.id !== todo.id));
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Could not delete todo. Try again.";
+      setDeleteErrorById((current) => ({ ...current, [todo.id]: message }));
+    } finally {
+      setDeletePendingById((current) => {
+        const next = { ...current };
+        delete next[todo.id];
+        return next;
+      });
     }
   };
 
@@ -166,17 +221,73 @@ export default function Home() {
             ) : null}
             {!isLoading && !loadError && todos.length > 0 ? (
               <ul className="space-y-3">
-                {todos.map((todo) => (
-                  <li
-                    key={todo.id}
-                    className="rounded-lg border border-slate-800 bg-slate-950/80 px-3 py-2"
-                  >
-                    <p className="font-medium text-slate-100">{todo.description}</p>
-                    <p className="mt-1 text-xs text-slate-400">
-                      Created {new Date(todo.createdAt).toLocaleString()}
-                    </p>
-                  </li>
-                ))}
+                {todos.map((todo) => {
+                  const togglePending = togglePendingById[todo.id] ?? false;
+                  const deletePending = deletePendingById[todo.id] ?? false;
+                  const toggleErr = toggleErrorById[todo.id];
+                  const deleteErr = deleteErrorById[todo.id];
+
+                  return (
+                    <li
+                      key={todo.id}
+                      className="rounded-lg border border-slate-800 bg-slate-950/80 px-3 py-3"
+                    >
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+                        <div className="min-w-0 flex flex-1 gap-3">
+                          <input
+                            id={`todo-complete-${todo.id}`}
+                            type="checkbox"
+                            className="mt-1 size-4 shrink-0 rounded border-slate-600 bg-slate-950 text-cyan-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400"
+                            checked={todo.completed}
+                            disabled={togglePending || deletePending}
+                            onChange={() => void handleToggleCompleted(todo)}
+                            aria-label={
+                              todo.completed
+                                ? `Mark incomplete: ${todo.description}`
+                                : `Mark complete: ${todo.description}`
+                            }
+                          />
+                          <div className="min-w-0 flex-1">
+                            <label
+                              className={`block cursor-pointer select-none font-medium ${
+                                todo.completed
+                                  ? "text-slate-500 line-through decoration-slate-500"
+                                  : "text-slate-100"
+                              }`}
+                              htmlFor={`todo-complete-${todo.id}`}
+                            >
+                              {todo.description}
+                            </label>
+                            <p className="mt-1 text-xs text-slate-400">
+                              Created {new Date(todo.createdAt).toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex shrink-0 flex-col items-stretch gap-2 sm:w-auto">
+                          <button
+                            type="button"
+                            className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-sm font-medium text-slate-200 transition hover:border-rose-500/60 hover:text-rose-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
+                            onClick={() => void handleDeleteTodo(todo)}
+                            disabled={togglePending || deletePending}
+                            aria-label={`Delete todo: ${todo.description}`}
+                          >
+                            {deletePending ? "Deleting..." : "Delete"}
+                          </button>
+                          {toggleErr ? (
+                            <p className="text-xs text-rose-300 sm:text-right" role="status">
+                              {toggleErr}
+                            </p>
+                          ) : null}
+                          {deleteErr ? (
+                            <p className="text-xs text-rose-300 sm:text-right" role="status">
+                              {deleteErr}
+                            </p>
+                          ) : null}
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
             ) : null}
           </section>

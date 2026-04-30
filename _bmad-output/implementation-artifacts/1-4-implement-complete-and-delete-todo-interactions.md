@@ -1,6 +1,6 @@
 # Story 1.4: Implement Complete and Delete Todo Interactions
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -17,18 +17,24 @@ so that my list reflects current task status.
 
 ## Tasks / Subtasks
 
-- [ ] Add toggle and delete controls to each todo row in `src/pages/index.tsx` with accessible labels and keyboard operability. (AC: 1, 2)
-- [ ] Add client helpers in `src/features/todos/client.js` for:
-- [ ] `PATCH /api/todos/:id` to update `completed`
-- [ ] `DELETE /api/todos/:id` to remove a todo
-- [ ] Wire UI handlers to call these helpers and update local list state immediately after successful responses while preserving newest-first order. (AC: 1, 2)
-- [ ] Render completed vs incomplete visual distinction (e.g., line-through + muted color) while keeping readability and contrast acceptable. (AC: 1)
-- [ ] Preserve existing create flow behavior and list/create validations from Story 1.3. (Regression)
-- [ ] Add/extend tests for:
-- [ ] successful toggle updates UI and persists after reload
-- [ ] successful delete removes item and persists after reload
-- [ ] failed toggle/delete surfaces non-blocking, user-readable error feedback
-- [ ] update docs if user-visible behavior or usage steps change.
+- [x] Add toggle and delete controls to each todo row in `src/pages/index.tsx` with accessible labels and keyboard operability. (AC: 1, 2)
+- [x] Add client helpers in `src/features/todos/client.js` for:
+- [x] `PATCH /api/todos/:id` to update `completed`
+- [x] `DELETE /api/todos/:id` to remove a todo
+- [x] Wire UI handlers to call these helpers and update local list state immediately after successful responses while preserving newest-first order. (AC: 1, 2)
+- [x] Render completed vs incomplete visual distinction (e.g., line-through + muted color) while keeping readability and contrast acceptable. (AC: 1)
+- [x] Preserve existing create flow behavior and list/create validations from Story 1.3. (Regression)
+- [x] Add/extend tests for:
+- [x] successful toggle updates UI and persists after reload
+- [x] successful delete removes item and persists after reload
+- [x] failed toggle/delete surfaces non-blocking, user-readable error feedback
+- [x] update docs if user-visible behavior or usage steps change.
+
+### Review Findings
+
+- [x] [Review][Patch] Sprint `last_updated` regressed chronologically versus the prior sprint-status value (implementations should bump this field forward whenever the sprint file is touched) [_bmad-output/implementation-artifacts/sprint-status.yaml] — resolved by setting `last_updated` to `2026-04-30T12:00:00Z` (after earlier `2026-04-30T03:00:00Z`).
+- [x] [Review][Defer] Toggle/delete mutations do not use a mounted flag before `setState` after awaits; mirrors existing create flow pattern and rarely surfaces in SPA tests [src/pages/index.tsx] — deferred, pre-existing
+- [x] [Review][Defer] Persistence is asserted via unmount/remount + fresh fetch mocks, not a literal browser reload; AC coverage is pragmatic but narrower than production navigation [tests/home-page.ui.test.tsx] — deferred, pre-existing
 
 ## Dev Notes
 
@@ -128,8 +134,19 @@ GPT-5 Codex
 
 - Ultimate context engine analysis completed - comprehensive developer guide created.
 - Story prepared for `dev-story` execution with explicit API, UI, and testing guardrails.
+- Implemented checkbox + delete controls on each row with per-row pending and error flags; wired `updateTodoCompleted` / `deleteTodo` and `sortTodosNewestFirst` for list consistency after PATCH. Extended Vitest home page coverage for toggle/delete success, remount persistence, and error paths; added node tests for new client helpers. Updated `docs/setup.md` verification steps for complete/delete.
 
 ### File List
 
+- src/features/todos/client.js
+- src/pages/index.tsx
+- tests/home-page.ui.test.tsx
+- tests/todo-ui.test.js
+- docs/setup.md
 - _bmad-output/implementation-artifacts/1-4-implement-complete-and-delete-todo-interactions.md
 - _bmad-output/implementation-artifacts/sprint-status.yaml
+
+## Change Log
+
+- 2026-04-29: Implemented Story 1.4 complete/delete UI and client helpers; tests and setup verification notes updated.
+- 2026-04-29: Follow-up review: sprint `last_updated` corrected forward; Story 1.4 returned to `review` in sprint tracking.

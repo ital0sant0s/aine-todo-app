@@ -126,4 +126,174 @@ describe("Home page todo flow", () => {
     });
     expect(screen.getByText("No todos yet. Add your first task above.")).toBeInTheDocument();
   });
+
+  it("marks a todo complete via PATCH, updates styling, and shows completed state after remount", async () => {
+    const createdAt = "2026-04-30T00:00:00.000Z";
+    const listItem = {
+      id: 1,
+      description: "Draft notes",
+      completed: false,
+      createdAt,
+    };
+    const completedItem = { ...listItem, completed: true };
+
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ data: [listItem] }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ data: completedItem }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ data: [completedItem] }),
+      });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(createElement(Home));
+    await screen.findByText("Draft notes");
+
+    const checkbox = screen.getByRole("checkbox", { name: "Mark complete: Draft notes" });
+    expect(checkbox).not.toBeChecked();
+    fireEvent.click(checkbox);
+
+    await waitFor(() => expect(checkbox).toBeChecked());
+    expect(screen.getByText("Draft notes")).toHaveClass("line-through");
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "/api/todos/1",
+      expect.objectContaining({
+        method: "PATCH",
+        body: JSON.stringify({ completed: true }),
+      }),
+    );
+
+    cleanup();
+    render(createElement(Home));
+    await waitFor(() => {
+      expect(screen.getByRole("checkbox", { name: "Mark incomplete: Draft notes" })).toBeChecked();
+    });
+  });
+
+  it("deletes a todo via DELETE and it stays gone after remount", async () => {
+    const a = {
+      id: 1,
+      description: "Stay",
+      completed: false,
+      createdAt: "2026-04-30T00:00:01.000Z",
+    };
+    const b = {
+      id: 2,
+      description: "Go away",
+      completed: false,
+      createdAt: "2026-04-30T00:00:00.000Z",
+    };
+
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ data: [a, b] }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ data: { id: b.id } }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ data: [a] }),
+      });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(createElement(Home));
+    await screen.findByText("Go away");
+
+    fireEvent.click(screen.getByRole("button", { name: "Delete todo: Go away" }));
+
+    await waitFor(() => {
+      expect(screen.queryByText("Go away")).not.toBeInTheDocument();
+    });
+    expect(screen.getByText("Stay")).toBeInTheDocument();
+
+    cleanup();
+    render(createElement(Home));
+    await waitFor(() => {
+      expect(screen.getByText("Stay")).toBeInTheDocument();
+    });
+    expect(screen.queryByText("Go away")).not.toBeInTheDocument();
+  });
+
+  it("shows non-blocking error when toggle completion fails", async () => {
+    const listItem = {
+      id: 5,
+      description: "Fragile task",
+      completed: false,
+      createdAt: "2026-04-30T00:00:00.000Z",
+    };
+
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ data: [listItem] }),
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({
+          error: { code: "INTERNAL_SERVER_ERROR", message: "Could not update completion." },
+        }),
+      });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(createElement(Home));
+    await screen.findByText("Fragile task");
+
+    fireEvent.click(screen.getByRole("checkbox", { name: "Mark complete: Fragile task" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Could not update completion.")).toBeInTheDocument();
+    });
+    expect(screen.getByRole("checkbox", { name: "Mark complete: Fragile task" })).not.toBeChecked();
+  });
+
+  it("shows non-blocking error when delete fails", async () => {
+    const listItem = {
+      id: 7,
+      description: "Protected task",
+      completed: false,
+      createdAt: "2026-04-30T00:00:00.000Z",
+    };
+
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ data: [listItem] }),
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({
+          error: { code: "INTERNAL_SERVER_ERROR", message: "Could not delete todo." },
+        }),
+      });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(createElement(Home));
+    await screen.findByText("Protected task");
+
+    fireEvent.click(screen.getByRole("button", { name: "Delete todo: Protected task" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Could not delete todo.")).toBeInTheDocument();
+    });
+    expect(screen.getByText("Protected task")).toBeInTheDocument();
+  });
 });

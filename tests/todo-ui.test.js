@@ -4,8 +4,10 @@ import assert from "node:assert/strict";
 
 import {
   createTodo,
+  deleteTodo,
   fetchTodos,
   insertTodoNewestFirst,
+  updateTodoCompleted,
   validateTodoDescription,
 } from "../src/features/todos/client.js";
 
@@ -89,5 +91,47 @@ test("createTodo posts trimmed description and returns created todo", async () =
   const todo = await createTodo("  Trimmed value  ", fetchMock);
   assert.equal(JSON.parse(capturedBody).description, "Trimmed value");
   assert.equal(todo.description, "Trimmed value");
+});
+
+test("updateTodoCompleted PATCHes completion and returns updated todo", async () => {
+  let capturedBody;
+  const fetchMock = async (url, init) => {
+    assert.equal(url, "/api/todos/3");
+    assert.equal(init?.method, "PATCH");
+    capturedBody = init?.body;
+    return {
+      ok: true,
+      async json() {
+        return {
+          data: {
+            id: 3,
+            description: "Task",
+            completed: true,
+            createdAt: "2026-04-30T00:00:00.000Z",
+          },
+        };
+      },
+    };
+  };
+
+  const updated = await updateTodoCompleted(3, true, fetchMock);
+  assert.equal(JSON.parse(capturedBody).completed, true);
+  assert.equal(updated.completed, true);
+});
+
+test("deleteTodo DELETEs by id and returns envelope data", async () => {
+  const fetchMock = async (url, init) => {
+    assert.equal(url, "/api/todos/8");
+    assert.equal(init?.method, "DELETE");
+    return {
+      ok: true,
+      async json() {
+        return { data: { id: 8 } };
+      },
+    };
+  };
+
+  const result = await deleteTodo(8, fetchMock);
+  assert.deepEqual(result, { id: 8 });
 });
 
