@@ -1,6 +1,6 @@
 # Story 1.3: Build Todo List and Create Flow in the UI
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -126,3 +126,4 @@ GPT-5 Codex
 
 - 2026-04-30: Created Story 1.3 context file and marked it ready for development.
 - 2026-04-30: Implemented todo list and create UI flow with validation, tests, and setup documentation updates; moved story to `review`.
+- 2026-04-30: Code review passed and story status moved to `done`.
