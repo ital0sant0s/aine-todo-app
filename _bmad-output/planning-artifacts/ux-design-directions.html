@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UX Design Directions - Aine Todo App</title>
+  <style>
+    :root { --bg:#f6f8fb; --text:#1f2937; --card:#ffffff; --muted:#6b7280; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: "Inter", system-ui, -apple-system, sans-serif; background:var(--bg); color:var(--text); }
+    header { padding:20px; background:#111827; color:#fff; position:sticky; top:0; }
+    main { display:grid; gap:16px; padding:16px; }
+    .dir { background:var(--card); border-radius:12px; box-shadow:0 8px 20px rgba(0,0,0,.06); overflow:hidden; }
+    .dir h2 { margin:0; padding:12px 16px; font-size:16px; border-bottom:1px solid #e5e7eb; }
+    .mock { padding:16px; min-height:190px; }
+    .bar { display:flex; gap:8px; margin-bottom:12px; }
+    .chip { padding:6px 10px; border-radius:999px; font-size:12px; }
+    .row { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid rgba(0,0,0,.06); }
+    .btn { padding:8px 12px; border-radius:8px; border:0; cursor:pointer; }
+    .cols { display:grid; grid-template-columns:repeat(auto-fit, minmax(260px,1fr)); gap:16px; }
+    .d1 .chip,.d1 .btn{ background:#1f4b99; color:#fff; }
+    .d2 .chip,.d2 .btn{ background:#0f766e; color:#fff; }
+    .d3 .chip,.d3 .btn{ background:#7c3aed; color:#fff; }
+    .d4 .chip,.d4 .btn{ background:#334155; color:#fff; }
+    .d5 .chip,.d5 .btn{ background:#be123c; color:#fff; }
+    .d6 .chip,.d6 .btn{ background:#0b3b2e; color:#fff; }
+    .d7 .chip,.d7 .btn{ background:#78350f; color:#fff; }
+    .d8 .chip,.d8 .btn{ background:#155e75; color:#fff; }
+    footer { padding:16px; color:var(--muted); font-size:13px; }
+  </style>
+</head>
+<body>
+  <header>
+    <strong>Aine Todo App · Design Direction Showcase</strong>
+    <div style="font-size:13px;opacity:.85;margin-top:4px;">8 baseline directions focused on clarity, speed, and trust.</div>
+  </header>
+  <main class="cols">
+    <section class="dir d1"><h2>Direction 1 · Structured Calm</h2><div class="mock"><div class="bar"><span class="chip">New Task</span></div><div class="row"><span>Pay electricity bill</span><button class="btn">Done</button></div><div class="row"><span>Review sprint notes</span><button class="btn">Done</button></div></div></section>
+    <section class="dir d2"><h2>Direction 2 · Fresh Productivity</h2><div class="mock"><div class="bar"><span class="chip">Add quickly</span></div><div class="row"><span>Book dentist appointment</span><button class="btn">Complete</button></div><div class="row"><span>Prepare weekly plan</span><button class="btn">Complete</button></div></div></section>
+    <section class="dir d3"><h2>Direction 3 · Modern Contrast</h2><div class="mock"><div class="bar"><span class="chip">Capture now</span></div><div class="row"><span>Clean inbox</span><button class="btn">Mark</button></div><div class="row"><span>Outline proposal</span><button class="btn">Mark</button></div></div></section>
+    <section class="dir d4"><h2>Direction 4 · Neutral Utility</h2><div class="mock"><div class="bar"><span class="chip">Task Input</span></div><div class="row"><span>Update portfolio</span><button class="btn">Toggle</button></div><div class="row"><span>Submit expense form</span><button class="btn">Toggle</button></div></div></section>
+    <section class="dir d5"><h2>Direction 5 · High-Energy Focus</h2><div class="mock"><div class="bar"><span class="chip">Create Item</span></div><div class="row"><span>Plan Friday retro</span><button class="btn">Done</button></div><div class="row"><span>Check API tests</span><button class="btn">Done</button></div></div></section>
+    <section class="dir d6"><h2>Direction 6 · Minimal Confidence</h2><div class="mock"><div class="bar"><span class="chip">Quick Add</span></div><div class="row"><span>Water plants</span><button class="btn">Done</button></div><div class="row"><span>Send status update</span><button class="btn">Done</button></div></div></section>
+    <section class="dir d7"><h2>Direction 7 · Warm Utility</h2><div class="mock"><div class="bar"><span class="chip">Type a task</span></div><div class="row"><span>Backup laptop</span><button class="btn">Check</button></div><div class="row"><span>Refactor hooks</span><button class="btn">Check</button></div></div></section>
+    <section class="dir d8"><h2>Direction 8 · Crisp Functional</h2><div class="mock"><div class="bar"><span class="chip">Add Todo</span></div><div class="row"><span>Read architecture doc</span><button class="btn">Done</button></div><div class="row"><span>Run accessibility pass</span><button class="btn">Done</button></div></div></section>
+  </main>
+  <footer>File: _bmad-output/planning-artifacts/ux-design-directions.html</footer>
+</body>
+</html>
