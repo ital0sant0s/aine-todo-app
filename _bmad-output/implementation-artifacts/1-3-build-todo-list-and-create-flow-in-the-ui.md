@@ -1,6 +1,6 @@
 # Story 1.3: Build Todo List and Create Flow in the UI
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -17,19 +17,19 @@ so that I can quickly manage tasks.
 
 ## Tasks / Subtasks
 
-- [ ] Replace the starter home page with a todo UI shell wired to the existing REST API.
-- [ ] Implement initial todo list fetch (`GET /api/todos`) on page load and render current todos newest-first.
-- [ ] Implement todo create form using the existing API contract (`POST /api/todos`) and trim input before submit.
-- [ ] Add client-side validation for description rules:
-- [ ] required after trim
-- [ ] max length 200 after trim
-- [ ] block submit and show inline, user-readable validation feedback when invalid
-- [ ] On successful create:
-- [ ] clear input
-- [ ] update list immediately while preserving newest-first order
-- [ ] Add non-blocking mutation error feedback for failed create requests.
-- [ ] Add/extend tests for list rendering + create flow + validation feedback.
-- [ ] Update docs if any frontend behavior assumptions or usage guidance change.
+- [x] Replace the starter home page with a todo UI shell wired to the existing REST API.
+- [x] Implement initial todo list fetch (`GET /api/todos`) on page load and render current todos newest-first.
+- [x] Implement todo create form using the existing API contract (`POST /api/todos`) and trim input before submit.
+- [x] Add client-side validation for description rules:
+- [x] required after trim
+- [x] max length 200 after trim
+- [x] block submit and show inline, user-readable validation feedback when invalid
+- [x] On successful create:
+- [x] clear input
+- [x] update list immediately while preserving newest-first order
+- [x] Add non-blocking mutation error feedback for failed create requests.
+- [x] Add/extend tests for list rendering + create flow + validation feedback.
+- [x] Update docs if any frontend behavior assumptions or usage guidance change.
 
 ## Dev Notes
 
@@ -91,16 +91,38 @@ GPT-5 Codex
 
 - Created via `bmad-create-story` from first `backlog` story in sprint-status.
 - Source artifacts analyzed: epics, architecture, UX specification, Story 1.2, and recent commits.
+- Implemented UI list/create flow in `src/pages/index.tsx` with API consumption from shared client helpers.
+- Added frontend behavior tests in `tests/todo-ui.test.js`.
+- Validation run: `npm test`, `npm run lint`, `npm run typecheck` (all passing).
 
 ### Completion Notes List
 
 - Ultimate context engine analysis completed - comprehensive developer guide created.
 - Story prepared for `dev-story` execution with explicit scope guardrails and test expectations.
+- Replaced starter page UI with todo list + create flow and accessible state messaging.
+- Added initial load fetch for `GET /api/todos` with loading, empty, and error display handling.
+- Implemented create flow for `POST /api/todos` with client-side validation for required/trimmed/max-length constraints.
+- Ensured successful creation clears input and updates list in newest-first order.
+- Added non-blocking create failure feedback.
+- Added automated UI helper tests and retained Story 1.2 API regression coverage.
+- Updated setup documentation with manual verification steps for the UI flow.
+- Added page-level UI tests with Vitest + Testing Library to validate Story 1.3 acceptance flows directly in the rendered page.
 
 ### File List
 
 - _bmad-output/implementation-artifacts/1-3-build-todo-list-and-create-flow-in-the-ui.md
+- _bmad-output/implementation-artifacts/sprint-status.yaml
+- package.json
+- package-lock.json
+- src/pages/index.tsx
+- src/features/todos/client.js
+- vitest.config.ts
+- tests/todo-ui.test.js
+- tests/home-page.ui.test.tsx
+- tests/vitest.setup.ts
+- docs/setup.md
 
 ## Change Log
 
 - 2026-04-30: Created Story 1.3 context file and marked it ready for development.
+- 2026-04-30: Implemented todo list and create UI flow with validation, tests, and setup documentation updates; moved story to `review`.

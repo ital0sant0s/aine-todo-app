@@ -43,3 +43,12 @@ This check inserts a todo without explicitly setting `completed` and verifies pe
 ```bash
 npm run dev
 ```
+
+## Verify UI list and create flow
+
+1. Open `http://localhost:3000`.
+2. Create a todo and confirm:
+- it appears in the list immediately
+- newest items render first
+- input clears after successful submit
+3. Submit empty/whitespace-only/over-limit text and confirm inline validation feedback is shown.
