@@ -13,11 +13,12 @@ const createMemoryRepo = () => {
 
   return {
     async create(description) {
+      const timestamp = new Date(nextId * 1000);
       const todo = {
         id: nextId++,
         description,
         completed: false,
-        createdAt: new Date(),
+        createdAt: timestamp,
       };
       todos.push(todo);
       return todo;
@@ -111,6 +112,28 @@ test("validation errors return HTTP 400 with error envelope", async () => {
   assert.equal(badPatch.body.error.code, "VALIDATION_ERROR");
 });
 
+test("GET /api/todos returns newest-first order", async () => {
+  const repo = createMemoryRepo();
+  const todosIndex = createTodosIndexHandler({ repo });
+
+  const firstCreateRes = createMockRes();
+  await todosIndex({ method: "POST", body: { description: "Older todo" } }, firstCreateRes);
+  assert.equal(firstCreateRes.statusCode, 201);
+
+  const secondCreateRes = createMockRes();
+  await todosIndex(
+    { method: "POST", body: { description: "Newer todo" } },
+    secondCreateRes,
+  );
+  assert.equal(secondCreateRes.statusCode, 201);
+
+  const listRes = createMockRes();
+  await todosIndex({ method: "GET", body: null }, listRes);
+  assert.equal(listRes.statusCode, 200);
+  assert.equal(listRes.body.data[0].description, "Newer todo");
+  assert.equal(listRes.body.data[1].description, "Older todo");
+});
+
 test("not found paths return HTTP 404 with error envelope", async () => {
   const repo = createMemoryRepo();
   const todoById = createTodoByIdHandler({ repo });
@@ -130,4 +153,28 @@ test("not found paths return HTTP 404 with error envelope", async () => {
   );
   assert.equal(deleteNotFound.statusCode, 404);
   assert.equal(deleteNotFound.body.error.code, "NOT_FOUND");
+});
+
+test("unexpected repository failure returns HTTP 500 error envelope", async () => {
+  const repo = {
+    async create() {
+      throw new Error("not used");
+    },
+    async list() {
+      throw new Error("boom");
+    },
+    async updateCompletion() {
+      throw new Error("not used");
+    },
+    async deleteById() {
+      throw new Error("not used");
+    },
+  };
+  const todosIndex = createTodosIndexHandler({ repo });
+
+  const listRes = createMockRes();
+  await todosIndex({ method: "GET", body: null }, listRes);
+  assert.equal(listRes.statusCode, 500);
+  assert.equal(listRes.body.error.code, "INTERNAL_SERVER_ERROR");
+  assert.equal(listRes.body.error.message, "Unexpected server error");
 });

@@ -20,10 +20,17 @@ export const prismaTodoRepository = {
       return null;
     }
 
-    return db.todo.update({
-      where: { id },
-      data: { completed },
-    });
+    try {
+      return await db.todo.update({
+        where: { id },
+        data: { completed },
+      });
+    } catch (error) {
+      if (typeof error === "object" && error !== null && "code" in error && error.code === "P2025") {
+        return null;
+      }
+      throw error;
+    }
   },
 
   async deleteById(id) {
