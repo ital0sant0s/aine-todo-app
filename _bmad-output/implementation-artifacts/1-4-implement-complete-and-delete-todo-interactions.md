@@ -1,6 +1,6 @@
 # Story 1.4: Implement Complete and Delete Todo Interactions
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -150,3 +150,4 @@ GPT-5 Codex
 
 - 2026-04-29: Implemented Story 1.4 complete/delete UI and client helpers; tests and setup verification notes updated.
 - 2026-04-29: Follow-up review: sprint `last_updated` corrected forward; Story 1.4 returned to `review` in sprint tracking.
+- 2026-04-30: Story marked done; sprint status synced to `done`.
