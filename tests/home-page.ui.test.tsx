@@ -34,10 +34,77 @@ describe("Home page todo flow", () => {
 
     render(createElement(Home));
 
+    const panel = screen.getByRole("region", { name: /your todos/i });
+    expect(panel).toHaveAttribute("aria-busy", "true");
     expect(screen.getByText("Loading todos...")).toBeInTheDocument();
     expect(await screen.findByText("Newest")).toBeInTheDocument();
+    expect(panel).toHaveAttribute("aria-busy", "false");
     expect(screen.getByText("Older")).toBeInTheDocument();
     expect(screen.getByText("2 todos")).toBeInTheDocument();
+  });
+
+  it("shows empty-state guidance after successful load with no todos", async () => {
+    const fetchMock = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({ data: [] }),
+    }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(createElement(Home));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/no todos yet\. add your first task above\./i),
+      ).toBeInTheDocument();
+    });
+    expect(fetchMock).toHaveBeenCalledWith("/api/todos");
+  });
+
+  it("shows load error with retry, then renders todos after retry succeeds", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({
+          error: { code: "INTERNAL_SERVER_ERROR", message: "Could not reach server." },
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          data: [
+            {
+              id: 1,
+              description: "After retry",
+              completed: false,
+              createdAt: "2026-04-30T00:00:00.000Z",
+            },
+          ],
+        }),
+      });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(createElement(Home));
+
+    await waitFor(() => {
+      expect(screen.getByText("Could not reach server.")).toBeInTheDocument();
+    });
+    expect(screen.getByRole("button", { name: /retry loading todos/i })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /retry loading todos/i }));
+
+    expect(screen.getByRole("region", { name: /your todos/i })).toHaveAttribute(
+      "aria-busy",
+      "true",
+    );
+    expect(screen.getByText("Loading todos...")).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText("After retry")).toBeInTheDocument();
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock).toHaveBeenNthCalledWith(1, "/api/todos");
+    expect(fetchMock).toHaveBeenNthCalledWith(2, "/api/todos");
   });
 
   it("creates a todo, clears input, and shows new item", async () => {

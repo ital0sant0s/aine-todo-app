@@ -1,5 +1,5 @@
 import Head from "next/head";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 
 import {
@@ -32,33 +32,37 @@ export default function Home() {
   const [toggleErrorById, setToggleErrorById] = useState<Record<number, string>>({});
   const [deleteErrorById, setDeleteErrorById] = useState<Record<number, string>>({});
 
+  const mountedRef = useRef(true);
+
   useEffect(() => {
-    let mounted = true;
-
-    const load = async () => {
-      setIsLoading(true);
-      setLoadError(null);
-      try {
-        const initialTodos = await fetchTodos();
-        if (!mounted) return;
-        setTodos(initialTodos);
-      } catch (error) {
-        if (!mounted) return;
-        const message =
-          error instanceof Error
-            ? error.message
-            : "Could not load todos. Please refresh and try again.";
-        setLoadError(message);
-      } finally {
-        if (mounted) setIsLoading(false);
-      }
-    };
-
-    void load();
+    mountedRef.current = true;
     return () => {
-      mounted = false;
+      mountedRef.current = false;
     };
   }, []);
+
+  const loadTodos = useCallback(async () => {
+    setIsLoading(true);
+    setLoadError(null);
+    try {
+      const initialTodos = await fetchTodos();
+      if (!mountedRef.current) return;
+      setTodos(initialTodos);
+    } catch (error) {
+      if (!mountedRef.current) return;
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Could not load todos. Please refresh and try again.";
+      setLoadError(message);
+    } finally {
+      if (mountedRef.current) setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadTodos();
+  }, [loadTodos]);
 
   const itemCountLabel = useMemo(() => {
     const count = todos.length;
@@ -202,19 +206,37 @@ export default function Home() {
           </section>
 
           <section
+            role="region"
+            aria-labelledby="your-todos-heading"
             aria-live="polite"
+            aria-busy={isLoading}
             className="rounded-xl border border-slate-800 bg-slate-900/40 p-4 sm:p-5"
           >
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-xl font-semibold">Your todos</h2>
+              <h2 id="your-todos-heading" className="text-xl font-semibold">
+                Your todos
+              </h2>
               <span className="text-sm text-slate-300">{itemCountLabel}</span>
             </div>
 
-            {isLoading ? <p className="text-slate-300">Loading todos...</p> : null}
-            {!isLoading && loadError ? (
-              <p className="text-rose-300" role="status">
-                {loadError}
+            {isLoading ? (
+              <p className="text-slate-300" role="status">
+                Loading todos...
               </p>
+            ) : null}
+            {!isLoading && loadError ? (
+              <div className="space-y-3">
+                <p className="text-rose-300" role="status">
+                  {loadError}
+                </p>
+                <button
+                  type="button"
+                  className="rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-sm font-semibold text-slate-100 transition hover:border-cyan-500/50 hover:text-cyan-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
+                  onClick={() => void loadTodos()}
+                >
+                  Retry loading todos
+                </button>
+              </div>
             ) : null}
             {!isLoading && !loadError && todos.length === 0 ? (
               <p className="text-slate-300">No todos yet. Add your first task above.</p>

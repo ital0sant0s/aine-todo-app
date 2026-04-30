@@ -54,3 +54,4 @@ npm run dev
 3. Submit empty/whitespace-only/over-limit text and confirm inline validation feedback is shown.
 4. Use the checkbox on a todo to mark it complete or incomplete and confirm styling updates; refresh and confirm the state matches the server.
 5. Use Delete on a todo and confirm it disappears immediately; refresh and confirm it stays removed.
+6. Simulate a failing initial todo request (stop the backend or block `GET /api/todos`), then confirm an error appears with **Retry loading todos** and that recovering the API and clicking retry loads the list again.

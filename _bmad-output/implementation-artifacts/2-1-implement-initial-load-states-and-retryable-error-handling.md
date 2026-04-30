@@ -1,6 +1,6 @@
 # Story 2.1: Implement Initial Load States and Retryable Error Handling
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -18,25 +18,25 @@ so that I always understand the current state and next action.
 
 ## Tasks / Subtasks
 
-- [ ] Refine initial-load UX in `src/pages/index.tsx` (AC: 1, 2, 3)
-  - [ ] Ensure loading branch is visibly distinct while `GET /api/todos` is in flight (AC: 1).
-  - [ ] Add semantics so assistive tech can perceive loading versus ready: e.g. `aria-busy` on the todos panel while loading, and/or a `role="status"` (or equivalent) message for loading that does not steal focus from the rest of the page (AC: 1). The outer list section already has `aria-live="polite"`; align loading announcements with it so duplicated noisy updates are avoided.
-  - [ ] Keep/create empty-state copy that explicitly invites adding a first todo (AC: 2). Preserve current behavior unless copy or structure must change to meet UX spec.
-  - [ ] On initial fetch failure (`fetchTodos` throws or non-OK path), render a readable error plus a labeled **Retry** control that calls the same load routine as the mount effect without requiring full page reload (AC: 3).
-  - [ ] While retry runs, show loading indicators consistent with AC 1 (AC: 3).
-  - [ ] Preserve existing Epic 1 behavior: create/list/toggle/delete flows, mutation error handling, newest-first ordering, and mounted-guard behavior in initial `useEffect` (regression).
+- [x] Refine initial-load UX in `src/pages/index.tsx` (AC: 1, 2, 3)
+  - [x] Ensure loading branch is visibly distinct while `GET /api/todos` is in flight (AC: 1).
+  - [x] Add semantics so assistive tech can perceive loading versus ready: e.g. `aria-busy` on the todos panel while loading, and/or a `role="status"` (or equivalent) message for loading that does not steal focus from the rest of the page (AC: 1). The outer list section already has `aria-live="polite"`; align loading announcements with it so duplicated noisy updates are avoided.
+  - [x] Keep/create empty-state copy that explicitly invites adding a first todo (AC: 2). Preserve current behavior unless copy or structure must change to meet UX spec.
+  - [x] On initial fetch failure (`fetchTodos` throws or non-OK path), render a readable error plus a labeled **Retry** control that calls the same load routine as the mount effect without requiring full page reload (AC: 3).
+  - [x] While retry runs, show loading indicators consistent with AC 1 (AC: 3).
+  - [x] Preserve existing Epic 1 behavior: create/list/toggle/delete flows, mutation error handling, newest-first ordering, and mounted-guard behavior in initial `useEffect` (regression).
 
-- [ ] Client layer (only if extraction reduces duplication): `src/features/todos/client.js`
-  - [ ] No breaking change to success/error semantics of `fetchTodos`; Epic 2.2+ still depend on the same envelope (regression).
+- [x] Client layer (only if extraction reduces duplication): `src/features/todos/client.js`
+  - [x] No breaking change to success/error semantics of `fetchTodos`; Epic 2.2+ still depend on the same envelope (regression).
 
-- [ ] Tests: extend `tests/home-page.ui.test.tsx` (and only add other suites if justified) (AC: 1–3)
-  - [ ] Assert loading text (or designated status region) appears while first fetch unresolved; then resolves to list or empty (AC: 1).
-  - [ ] Assert successful empty-list path still surfaces guidance to add a first todo (AC: 2).
-  - [ ] Assert failing first fetch shows error messaging and Retry; simulate second successful fetch after Retry and verify list renders (AC: 3).
-  - [ ] Maintain existing tests for Epic 1 flows without regressions.
+- [x] Tests: extend `tests/home-page.ui.test.tsx` (and only add other suites if justified) (AC: 1–3)
+  - [x] Assert loading text (or designated status region) appears while first fetch unresolved; then resolves to list or empty (AC: 1).
+  - [x] Assert successful empty-list path still surfaces guidance to add a first todo (AC: 2).
+  - [x] Assert failing first fetch shows error messaging and Retry; simulate second successful fetch after Retry and verify list renders (AC: 3).
+  - [x] Maintain existing tests for Epic 1 flows without regressions.
 
-- [ ] Documentation
-  - [ ] Update `docs/setup.md` only if verification steps mention load behavior and need the retry path documented.
+- [x] Documentation
+  - [x] Update `docs/setup.md` only if verification steps mention load behavior and need the retry path documented.
 
 ### Cross-story boundaries (non-goals)
 
@@ -98,19 +98,25 @@ Story 2.1 is Epic 2’s opener. Functional scope is FR-011 (initial load state b
 
 ### Agent Model Used
 
-(Story creation workflow)
+Composer (Cursor agent)
 
 ### Debug Log References
 
 ### Completion Notes List
 
 - Ultimate context engine analysis completed — comprehensive developer guide created for Epic 2.1 focusing on retryable initial load failures and accessibility of loading/empty/error branches relative to existing `src/pages/index.tsx` implementation.
+- Implemented `loadTodos` as a stable `useCallback` with `mountedRef` guard; todos panel is a named `role="region"` with `aria-labelledby`, `aria-busy` while fetching, and loading text `role="status"`. Initial load errors show **Retry loading todos** reusing the same loader; `fetchTodos` unchanged.
+- Extended `tests/home-page.ui.test.tsx` for `aria-busy`, empty-state copy, and fail-then-retry path; added setup verification step for retry. Full `npm run test:ui`, `npm test`, and `npm run check` pass.
 
 ### File List
 
+- src/pages/index.tsx
+- tests/home-page.ui.test.tsx
+- docs/setup.md
 - _bmad-output/implementation-artifacts/2-1-implement-initial-load-states-and-retryable-error-handling.md
 - _bmad-output/implementation-artifacts/sprint-status.yaml
 
 ## Change Log
 
 - 2026-04-30: Story authored via `bmad-create-story`; sprint tracking set to ready-for-dev for `2-1-implement-initial-load-states-and-retryable-error-handling`; epic-2 activated to in-progress.
+- 2026-04-30: Implemented initial-load retry, region semantics, and tests; story set to review per dev-story completion.
