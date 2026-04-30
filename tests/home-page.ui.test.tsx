@@ -1,4 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import type { Result } from "axe-core";
+import { axe } from "jest-axe";
 import { createElement } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -42,6 +45,26 @@ function wrapFetchStampAfterMutationJson(
   };
 
   return wrapped;
+}
+
+function setViewportWidth(width: number) {
+  Object.defineProperty(window, "innerWidth", {
+    configurable: true,
+    writable: true,
+    value: width,
+  });
+  Object.defineProperty(document.documentElement, "clientWidth", {
+    configurable: true,
+    value: width,
+  });
+}
+
+async function expectNoCriticalA11yViolations(container: HTMLElement) {
+  const results = await axe(container);
+  const critical = results.violations.filter(
+    (v: Result) => v.impact === "critical",
+  );
+  expect(critical, JSON.stringify(critical, null, 2)).toEqual([]);
 }
 
 describe("Home page todo flow", () => {
@@ -615,5 +638,211 @@ describe("Home page mutation latency (Story 2.2)", () => {
     }
 
     expect(withinBudget).toBeGreaterThanOrEqual(95);
+  });
+});
+
+describe("Home page responsive layout and accessibility (Story 2.3)", () => {
+  it("has zero critical axe violations while todos are loading", async () => {
+    let releaseFetch!: (value: unknown) => void;
+    const fetchGate = new Promise<unknown>((resolve) => {
+      releaseFetch = resolve;
+    });
+
+    vi.stubGlobal("fetch", vi.fn(() => fetchGate));
+
+    const { container } = render(createElement(Home));
+    await screen.findByText("Loading todos...");
+    await expectNoCriticalA11yViolations(container);
+
+    releaseFetch({
+      ok: true,
+      json: async () => ({ data: [] }),
+    });
+
+    await screen.findByText(/no todos yet/i);
+    vi.unstubAllGlobals();
+  });
+
+  it.each([360, 768, 1024, 1440] as const)(
+    "keeps document width within viewport and leaves main controls operable at %ipx",
+    async (width) => {
+      const longDescription =
+        "A-very-long-unbroken-token-that-would-force-overflow-without-wrapping-ABCDEFGHIJKLMNOPQRSTUVWXYZ-0123456789";
+      const fetchMock = vi.fn(async () => ({
+        ok: true,
+        json: async () => ({
+          data: [
+            {
+              id: 1,
+              description: longDescription,
+              completed: false,
+              createdAt: "2026-04-30T00:00:00.000Z",
+            },
+          ],
+        }),
+      }));
+      vi.stubGlobal("fetch", fetchMock);
+
+      setViewportWidth(width);
+      const { container } = render(createElement(Home));
+
+      await screen.findByText(longDescription);
+
+      expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(
+        document.documentElement.clientWidth,
+      );
+
+      expect(screen.getByLabelText("New todo")).toBeEnabled();
+      expect(screen.getByRole("button", { name: "Add todo" })).toBeEnabled();
+      expect(
+        screen.getByRole("checkbox", {
+          name: `Mark complete: ${longDescription}`,
+        }),
+      ).toBeEnabled();
+      expect(
+        screen.getByRole("button", {
+          name: `Delete todo: ${longDescription}`,
+        }),
+      ).toBeEnabled();
+
+      await expectNoCriticalA11yViolations(container);
+      vi.unstubAllGlobals();
+    },
+  );
+
+  it("reports zero critical axe violations for loading, error-with-retry, empty, and populated states", async () => {
+    const item = {
+      id: 1,
+      description: "Task one",
+      completed: false,
+      createdAt: "2026-04-30T00:00:00.000Z",
+    };
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({
+        ok: true,
+        json: async () => ({ data: [] }),
+      })),
+    );
+    const { container: emptyContainer, unmount: unmountEmpty } = render(createElement(Home));
+    await screen.findByText(/no todos yet/i);
+    await expectNoCriticalA11yViolations(emptyContainer);
+    unmountEmpty();
+    vi.unstubAllGlobals();
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({
+        ok: false,
+        json: async () => ({
+          error: { code: "INTERNAL_SERVER_ERROR", message: "Could not reach server." },
+        }),
+      })),
+    );
+    const { container: errContainer, unmount: unmountErr } = render(createElement(Home));
+    await screen.findByText("Could not reach server.");
+    await expectNoCriticalA11yViolations(errContainer);
+    unmountErr();
+    vi.unstubAllGlobals();
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({
+        ok: true,
+        json: async () => ({ data: [item] }),
+      })),
+    );
+    const { container: listContainer } = render(createElement(Home));
+    await screen.findByText("Task one");
+    await expectNoCriticalA11yViolations(listContainer);
+    vi.unstubAllGlobals();
+  });
+
+  it("supports keyboard-only create, toggle, and delete without using the pointer", async () => {
+    const user = userEvent.setup();
+    const a = {
+      id: 1,
+      description: "Alpha",
+      completed: false,
+      createdAt: "2026-04-30T00:00:01.000Z",
+    };
+    const b = {
+      id: 2,
+      description: "Beta",
+      completed: false,
+      createdAt: "2026-04-30T00:00:00.000Z",
+    };
+
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ data: [a, b] }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          data: {
+            id: 99,
+            description: "From keyboard",
+            completed: false,
+            createdAt: "2026-04-30T00:00:02.000Z",
+          },
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          data: {
+            id: 99,
+            description: "From keyboard",
+            completed: true,
+            createdAt: "2026-04-30T00:00:02.000Z",
+          },
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ data: { id: 99 } }),
+      });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(createElement(Home));
+    await screen.findByText("Beta");
+
+    const newTodo = screen.getByLabelText("New todo");
+    await user.tab();
+    expect(newTodo).toHaveFocus();
+    await user.keyboard("From keyboard");
+    await user.tab();
+    expect(screen.getByRole("button", { name: "Add todo" })).toHaveFocus();
+    await user.keyboard("{Enter}");
+
+    await screen.findByText("From keyboard");
+
+    const checkbox = screen.getByRole("checkbox", {
+      name: "Mark complete: From keyboard",
+    });
+    for (let i = 0; i < 40 && document.activeElement !== checkbox; i++) {
+      await user.tab();
+    }
+    expect(checkbox).toHaveFocus();
+    await user.keyboard(" ");
+    await waitFor(() => expect(checkbox).toBeChecked());
+
+    const deleteBtn = screen.getByRole("button", {
+      name: "Delete todo: From keyboard",
+    });
+    for (let i = 0; i < 40 && document.activeElement !== deleteBtn; i++) {
+      await user.tab();
+    }
+    expect(deleteBtn).toHaveFocus();
+    await user.keyboard("{Enter}");
+
+    await waitFor(() => {
+      expect(screen.queryByText("From keyboard")).not.toBeInTheDocument();
+    });
   });
 });

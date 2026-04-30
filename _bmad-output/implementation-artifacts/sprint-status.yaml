@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-04-30T01:29:45Z
-last_updated: 2026-04-30T23:55:00Z
+last_updated: 2026-04-30T23:59:59Z
 project: aine-todo-app-v3
 project_key: NOKEY
 tracking_system: file-system
@@ -51,5 +51,5 @@ development_status:
   epic-2: in-progress
   2-1-implement-initial-load-states-and-retryable-error-handling: done
   2-2-implement-mutation-error-feedback-and-latency-aware-ui-updates: done
-  2-3-deliver-responsive-and-accessible-main-todo-flow: backlog
+  2-3-deliver-responsive-and-accessible-main-todo-flow: done
   epic-2-retrospective: optional

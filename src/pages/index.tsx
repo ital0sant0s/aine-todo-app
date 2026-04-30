@@ -177,8 +177,8 @@ export default function Home() {
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className="min-h-screen bg-slate-950 text-slate-100">
-        <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 py-10 sm:px-6">
+      <main className="min-h-screen w-full min-w-0 overflow-x-clip bg-slate-950 text-slate-100">
+        <div className="mx-auto flex w-full min-w-0 max-w-2xl flex-col gap-6 px-4 py-10 sm:px-6">
           <header className="space-y-2">
             <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
               Aine Todo
@@ -188,28 +188,30 @@ export default function Home() {
             </p>
           </header>
 
-          <section className="rounded-xl border border-slate-800 bg-slate-900/70 p-4 sm:p-5">
+          <section className="min-w-0 rounded-xl border border-slate-800 bg-slate-900/70 p-4 sm:p-5">
             <form className="space-y-3" onSubmit={handleSubmit} noValidate>
               <label className="block text-sm font-medium" htmlFor="todo-input">
                 New todo
               </label>
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <input
-                  id="todo-input"
-                  name="description"
-                  type="text"
-                  value={description}
-                  onChange={(event) => setDescription(event.target.value)}
-                  maxLength={200}
-                  placeholder="e.g. Prepare sprint review notes"
-                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 outline-none ring-offset-2 ring-offset-slate-950 focus-visible:ring-2 focus-visible:ring-cyan-400"
-                  aria-invalid={validationError ? "true" : "false"}
-                  aria-describedby={validationError ? "todo-validation-error" : undefined}
-                />
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
+                <div className="min-w-0 flex-1">
+                  <input
+                    id="todo-input"
+                    name="description"
+                    type="text"
+                    value={description}
+                    onChange={(event) => setDescription(event.target.value)}
+                    maxLength={200}
+                    placeholder="e.g. Prepare sprint review notes"
+                    className="w-full min-w-0 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-slate-100 outline-none ring-offset-2 ring-offset-slate-950 focus-visible:ring-2 focus-visible:ring-cyan-400"
+                    aria-invalid={validationError ? "true" : "false"}
+                    aria-describedby={validationError ? "todo-validation-error" : undefined}
+                  />
+                </div>
                 <button
                   type="submit"
                   disabled={isCreating}
-                  className="rounded-lg bg-cyan-400 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="shrink-0 rounded-lg bg-cyan-400 px-4 py-2 text-sm font-semibold text-slate-950 outline-none transition hover:bg-cyan-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isCreating ? "Adding..." : "Add todo"}
                 </button>
@@ -232,7 +234,7 @@ export default function Home() {
             aria-labelledby="your-todos-heading"
             aria-live="polite"
             aria-busy={isLoading}
-            className="rounded-xl border border-slate-800 bg-slate-900/40 p-4 sm:p-5"
+            className="min-w-0 rounded-xl border border-slate-800 bg-slate-900/40 p-4 sm:p-5"
           >
             <div className="mb-4 flex items-center justify-between">
               <h2 id="your-todos-heading" className="text-xl font-semibold">
@@ -274,10 +276,10 @@ export default function Home() {
                   return (
                     <li
                       key={todo.id}
-                      className="rounded-lg border border-slate-800 bg-slate-950/80 px-3 py-3"
+                      className="min-w-0 rounded-lg border border-slate-800 bg-slate-950/80 px-3 py-3"
                     >
-                      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
-                        <div className="min-w-0 flex flex-1 gap-3">
+                      <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+                        <div className="flex min-w-0 flex-1 gap-3">
                           <input
                             id={`todo-complete-${todo.id}`}
                             type="checkbox"
@@ -293,7 +295,7 @@ export default function Home() {
                           />
                           <div className="min-w-0 flex-1">
                             <label
-                              className={`block cursor-pointer select-none font-medium ${
+                              className={`block cursor-pointer select-none break-words font-medium ${
                                 todo.completed
                                   ? "text-slate-500 line-through decoration-slate-500"
                                   : "text-slate-100"
@@ -307,10 +309,10 @@ export default function Home() {
                             </p>
                           </div>
                         </div>
-                        <div className="flex shrink-0 flex-col items-stretch gap-2 sm:w-auto">
+                        <div className="flex w-full shrink-0 flex-col items-stretch gap-2 sm:w-auto">
                           <button
                             type="button"
-                            className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-sm font-medium text-slate-200 transition hover:border-rose-500/60 hover:text-rose-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
+                            className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-sm font-medium text-slate-200 transition hover:border-rose-500/60 hover:text-rose-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                             onClick={() => void handleDeleteTodo(todo)}
                             disabled={togglePending || deletePending}
                             aria-label={`Delete todo: ${todo.description}`}
