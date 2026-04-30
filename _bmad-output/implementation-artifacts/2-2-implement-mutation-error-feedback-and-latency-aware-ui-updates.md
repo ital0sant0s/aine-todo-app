@@ -1,6 +1,6 @@
 # Story 2.2: Implement Mutation Error Feedback and Latency-Aware UI Updates
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -17,27 +17,27 @@ so that I can trust the system response.
 
 ## Tasks / Subtasks
 
-- [ ] Enrich mutation error copy in `src/pages/index.tsx` (AC: 2)
-  - [ ] For **create** failures (API path after validation passes): ensure the surfaced message explicitly states the operation (e.g. lead with **Create:** or “Could not create …”) **and** includes short recovery guidance (e.g. retrying the action, checking connection). Preserve use of API `error.message` as the detail when present. (AC: 2)
-  - [ ] For **toggle** (PATCH completion) failures: same pattern with **toggle** context and recovery guidance (per-row non-blocking message). (AC: 2)
-  - [ ] For **delete** failures: same pattern with **delete** context and recovery guidance. (AC: 2)
-  - [ ] Keep messages **non-blocking**: do not disable the whole page, full-page alert, or block the create form after a row-level failure. Other rows and create must stay usable. (AC: 2)
-  - [ ] Do **not** change initial load / `loadError` copy for this story unless required to avoid contradictory patterns (Story 2.1). (Regression / scope)
+- [x] Enrich mutation error copy in `src/pages/index.tsx` (AC: 2)
+  - [x] For **create** failures (API path after validation passes): ensure the surfaced message explicitly states the operation (e.g. lead with **Create:** or “Could not create …”) **and** includes short recovery guidance (e.g. retrying the action, checking connection). Preserve use of API `error.message` as the detail when present. (AC: 2)
+  - [x] For **toggle** (PATCH completion) failures: same pattern with **toggle** context and recovery guidance (per-row non-blocking message). (AC: 2)
+  - [x] For **delete** failures: same pattern with **delete** context and recovery guidance. (AC: 2)
+  - [x] Keep messages **non-blocking**: do not disable the whole page, full-page alert, or block the create form after a row-level failure. Other rows and create must stay usable. (AC: 2)
+  - [x] Do **not** change initial load / `loadError` copy for this story unless required to avoid contradictory patterns (Story 2.1). (Regression / scope)
 
-- [ ] Latency verification in integration tests (AC: 1)
-  - [ ] Extend `tests/home-page.ui.test.tsx` (preferred) **or** add a focused `tests/*latency*.tsx` suite if isolation is cleaner—keep one clear home for Vitest RTL tests.
-  - [ ] Define a repeatable measurement: timestamp **when the mocked fetch for the mutation resolves** (response + body consumed—i.e. when control returns from the mocked `fetch` to app code) and timestamp **when the expected DOM outcome is observable** (e.g. new row text present, checkbox checked state, row removed). Use `performance.now()` deltas. Document in a short comment above the helper. (AC: 1)
-  - [ ] For each mutation type (**create**, **toggle**, **delete**), run **100 iterations** in a single test (or three tests) that re-render/mount a fresh tree and perform the happy path with a deterministic fast mock; assert **≥ 95** iterations meet **delta ≤ 300ms**. (AC: 1)
-  - [ ] Add at least **one non-loop** assertion per mutation type that successful completion still matches server state already covered (list order, checkbox state, removal) so regressions are not hidden inside the statistical check. May extend existing tests or assert inside the latency loop’s first iteration. (AC: 1)
+- [x] Latency verification in integration tests (AC: 1)
+  - [x] Extend `tests/home-page.ui.test.tsx` (preferred) **or** add a focused `tests/*latency*.tsx` suite if isolation is cleaner—keep one clear home for Vitest RTL tests.
+  - [x] Define a repeatable measurement: timestamp **when the mocked fetch for the mutation resolves** (response + body consumed—i.e. when control returns from the mocked `fetch` to app code) and timestamp **when the expected DOM outcome is observable** (e.g. new row text present, checkbox checked state, row removed). Use `performance.now()` deltas. Document in a short comment above the helper. (AC: 1)
+  - [x] For each mutation type (**create**, **toggle**, **delete**), run **100 iterations** in a single test (or three tests) that re-render/mount a fresh tree and perform the happy path with a deterministic fast mock; assert **≥ 95** iterations meet **delta ≤ 300ms**. (AC: 1)
+  - [x] Add at least **one non-loop** assertion per mutation type that successful completion still matches server state already covered (list order, checkbox state, removal) so regressions are not hidden inside the statistical check. May extend existing tests or assert inside the latency loop’s first iteration. (AC: 1)
 
-- [ ] Align existing failure-path tests with new error format (AC: 2 + regression)
-  - [ ] Update expectations in `tests/home-page.ui.test.tsx` for create/toggle/delete API errors to match the new operation + recovery wording. (AC: 2)
+- [x] Align existing failure-path tests with new error format (AC: 2 + regression)
+  - [x] Update expectations in `tests/home-page.ui.test.tsx` for create/toggle/delete API errors to match the new operation + recovery wording. (AC: 2)
 
-- [ ] Client / API contract
-  - [ ] Keep `src/features/todos/client.js` envelopes and `parseErrorMessage` behavior; formatting for operation context belongs in the page layer unless a tiny shared formatter in `src/features/todos/` reduces duplication **without** changing thrown `Error.message` semantics for callers that expect raw API text. Prefer page-level formatter for clarity. (Regression)
+- [x] Client / API contract
+  - [x] Keep `src/features/todos/client.js` envelopes and `parseErrorMessage` behavior; formatting for operation context belongs in the page layer unless a tiny shared formatter in `src/features/todos/` reduces duplication **without** changing thrown `Error.message` semantics for callers that expect raw API text. Prefer page-level formatter for clarity. (Regression)
 
-- [ ] Documentation (only if helpful)
-  - [ ] Optionally add a short “Latency checks” bullet under `npm run test:ui` in `docs/setup.md` if maintainers need to know 2.2 adds a heavier looped test—skip if iteration time is negligible.
+- [x] Documentation (only if helpful)
+  - [x] Optionally add a short “Latency checks” bullet under `npm run test:ui` in `docs/setup.md` if maintainers need to know 2.2 adds a heavier looped test—skip if iteration time is negligible.
 
 ### Cross-story boundaries (non-goals)
 
@@ -99,12 +99,25 @@ Flaky CI: if looped latency tests jitter near 300ms under load, prefer **determi
 ### Completion Notes List
 
 - Ultimate context engine analysis completed — story targets mutation error wording gaps vs AC2 and latency/statistical assertions vs AC1 / NFR-002 tie-in.
+- Implemented `formatMutationOperationError` on the home page for create/toggle/delete so API detail is preserved with operation label and recovery line; mutation failure tests updated.
+- Added `wrapFetchStampAfterMutationJson` plus three looped latency tests (100 iterations each mutation, ≥95 per test within 300ms after mocked `response.json()`); first-iteration regressions cover POST/PATCH bodies, count, checkbox/line-through, DELETE URL, and preserved row after delete.
+- `src/features/todos/client.js` unchanged except as verified (envelopes/raw errors unchanged).
+- Code review (`bmad-code-review`, 2026-04-30): Blind Hunter, Edge Case Hunter, Acceptance Auditor synthesis — no actionable findings persisted; Status set to done and sprint synced.
+
+### Implementation Plan
+
+- Page-level formatter avoids changing client `Error.message` semantics; UI-only composition for AC2.
 
 ### File List
 
+- src/pages/index.tsx
+- tests/home-page.ui.test.tsx
+- docs/setup.md
 - _bmad-output/implementation-artifacts/2-2-implement-mutation-error-feedback-and-latency-aware-ui-updates.md
 - _bmad-output/implementation-artifacts/sprint-status.yaml
 
 ## Change Log
 
 - 2026-04-30: Story created via `bmad-create-story`; `2-2` moved from backlog to ready-for-dev (Epic 2 already in-progress).
+- 2026-04-30: Implemented mutation error enrichment, statistical latency RTL tests per AC1/NFR-002 posture, aligned failure-path expectations; documented Vitest latency section in setup; story status moved to review.
+- 2026-04-30: Code review completed; zero triaged defects (remaining noise dismissed); Story 2.2 and sprint marked done.

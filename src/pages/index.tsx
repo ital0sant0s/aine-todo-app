@@ -19,6 +19,22 @@ type Todo = {
   createdAt: string;
 };
 
+type MutationOperation = "create" | "toggle" | "delete";
+
+function formatMutationOperationError(operation: MutationOperation, detail: string): string {
+  const recovery =
+    operation === "create"
+      ? "Try adding the todo again or check your connection."
+      : operation === "toggle"
+        ? "Try toggling completion again or check your connection."
+        : "Try deleting again or check your connection.";
+  const label = operation === "create" ? "Create" : operation === "toggle" ? "Toggle" : "Delete";
+  const trimmedDetail = detail.trim();
+  const body = trimmedDetail.length > 0 ? trimmedDetail : "Something went wrong.";
+  const separator = /[.!?]$/.test(body) ? "" : ".";
+  return `${label}: ${body}${separator} ${recovery}`;
+}
+
 export default function Home() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [description, setDescription] = useState("");
@@ -87,11 +103,11 @@ export default function Home() {
       setTodos((current) => insertTodoNewestFirst(current, created));
       setDescription("");
     } catch (error) {
-      const message =
+      const detail =
         error instanceof Error
           ? error.message
           : "Could not create todo. Please try again.";
-      setCreateError(message);
+      setCreateError(formatMutationOperationError("create", detail));
     } finally {
       setIsCreating(false);
     }
@@ -110,9 +126,12 @@ export default function Home() {
         sortTodosNewestFirst(current.map((t) => (t.id === updated.id ? updated : t))),
       );
     } catch (error) {
-      const message =
+      const detail =
         error instanceof Error ? error.message : "Could not update todo. Try again.";
-      setToggleErrorById((current) => ({ ...current, [todo.id]: message }));
+      setToggleErrorById((current) => ({
+        ...current,
+        [todo.id]: formatMutationOperationError("toggle", detail),
+      }));
     } finally {
       setTogglePendingById((current) => {
         const next = { ...current };
@@ -133,9 +152,12 @@ export default function Home() {
       await deleteTodo(todo.id);
       setTodos((current) => current.filter((t) => t.id !== todo.id));
     } catch (error) {
-      const message =
+      const detail =
         error instanceof Error ? error.message : "Could not delete todo. Try again.";
-      setDeleteErrorById((current) => ({ ...current, [todo.id]: message }));
+      setDeleteErrorById((current) => ({
+        ...current,
+        [todo.id]: formatMutationOperationError("delete", detail),
+      }));
     } finally {
       setDeletePendingById((current) => {
         const next = { ...current };

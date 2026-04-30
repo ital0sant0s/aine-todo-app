@@ -9,6 +9,41 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+/**
+ * Mutation UI latency baseline: capture `performance.now()` immediately after the mocked Response
+ * `json()` promise resolves for a mutation (`POST`/`PATCH`/`DELETE`), aligned with when the todo client
+ * has finished consuming `{ error }` or `{ data }`. Pair with DOM observation time once the outcome
+ * is found (e.g. `findBy*`).
+ */
+function wrapFetchStampAfterMutationJson(
+  impl: (...args: Parameters<typeof fetch>) => ReturnType<typeof fetch>,
+  isMutation: (input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) => boolean,
+  onBodyConsumed: (atMs: number) => void,
+): typeof fetch {
+  const wrapped: typeof fetch = async (...args) => {
+    const response = await impl(...args);
+    if (!isMutation(...args)) {
+      return response;
+    }
+
+    return new Proxy(response as object, {
+      get(target, prop, receiver) {
+        if (prop === "json") {
+          const orig = Reflect.get(target, prop, receiver) as () => Promise<unknown>;
+          return async () => {
+            const payload = await orig.call(target);
+            onBodyConsumed(performance.now());
+            return payload;
+          };
+        }
+        return Reflect.get(target, prop, receiver);
+      },
+    }) as Response;
+  };
+
+  return wrapped;
+}
+
 describe("Home page todo flow", () => {
   it("renders fetched todos on initial load", async () => {
     const fetchMock = vi.fn(async () => ({
@@ -189,7 +224,11 @@ describe("Home page todo flow", () => {
     fireEvent.click(screen.getByRole("button", { name: "Add todo" }));
 
     await waitFor(() => {
-      expect(screen.getByText("Could not save todo.")).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          "Create: Could not save todo. Try adding the todo again or check your connection.",
+        ),
+      ).toBeInTheDocument();
     });
     expect(screen.getByText("No todos yet. Add your first task above.")).toBeInTheDocument();
   });
@@ -325,7 +364,11 @@ describe("Home page todo flow", () => {
     fireEvent.click(screen.getByRole("checkbox", { name: "Mark complete: Fragile task" }));
 
     await waitFor(() => {
-      expect(screen.getByText("Could not update completion.")).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          "Toggle: Could not update completion. Try toggling completion again or check your connection.",
+        ),
+      ).toBeInTheDocument();
     });
     expect(screen.getByRole("checkbox", { name: "Mark complete: Fragile task" })).not.toBeChecked();
   });
@@ -359,8 +402,218 @@ describe("Home page todo flow", () => {
     fireEvent.click(screen.getByRole("button", { name: "Delete todo: Protected task" }));
 
     await waitFor(() => {
-      expect(screen.getByText("Could not delete todo.")).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          "Delete: Could not delete todo. Try deleting again or check your connection.",
+        ),
+      ).toBeInTheDocument();
     });
     expect(screen.getByText("Protected task")).toBeInTheDocument();
+  });
+});
+
+describe("Home page mutation latency (Story 2.2)", () => {
+  it("shows create success DOM within 300ms after mutation body consumes in ≥95 of 100 runs", async () => {
+    let withinBudget = 0;
+
+    for (let i = 0; i < 100; i++) {
+      let bodyConsumedAt = 0;
+
+      const innerFetch = vi
+        .fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ data: [] }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            data: {
+              id: 99,
+              description: "Buy milk",
+              completed: false,
+              createdAt: "2026-04-30T00:00:02.000Z",
+            },
+          }),
+        });
+
+      vi.stubGlobal(
+        "fetch",
+        wrapFetchStampAfterMutationJson(
+          (...args) => innerFetch(...args) as Promise<Response>,
+          (_url, init) => init?.method === "POST",
+          (at) => {
+            bodyConsumedAt = at;
+          },
+        ),
+      );
+
+      render(createElement(Home));
+      await screen.findByText("No todos yet. Add your first task above.");
+
+      const input = screen.getByLabelText("New todo");
+      fireEvent.change(input, { target: { value: "  Buy milk  " } });
+      fireEvent.click(screen.getByRole("button", { name: "Add todo" }));
+
+      await screen.findByText("Buy milk");
+
+      expect(bodyConsumedAt).toBeGreaterThan(0);
+      const deltaMs = performance.now() - bodyConsumedAt;
+      if (deltaMs <= 300) withinBudget++;
+
+      if (i === 0) {
+        expect(screen.getByText("1 todo")).toBeInTheDocument();
+        expect((input as HTMLInputElement).value).toBe("");
+        expect(innerFetch).toHaveBeenNthCalledWith(
+          2,
+          "/api/todos",
+          expect.objectContaining({
+            method: "POST",
+            body: JSON.stringify({ description: "Buy milk" }),
+          }),
+        );
+      }
+
+      cleanup();
+      vi.unstubAllGlobals();
+    }
+
+    expect(withinBudget).toBeGreaterThanOrEqual(95);
+  });
+
+  it("shows toggle success DOM within 300ms after mutation body consumes in ≥95 of 100 runs", async () => {
+    const createdAt = "2026-04-30T00:00:00.000Z";
+    const listItem = {
+      id: 1,
+      description: "Draft notes",
+      completed: false,
+      createdAt,
+    };
+    const completedItem = { ...listItem, completed: true };
+
+    let withinBudget = 0;
+
+    for (let i = 0; i < 100; i++) {
+      let bodyConsumedAt = 0;
+
+      const innerFetch = vi
+        .fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ data: [listItem] }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ data: completedItem }),
+        });
+
+      vi.stubGlobal(
+        "fetch",
+        wrapFetchStampAfterMutationJson(
+          (...args) => innerFetch(...args) as Promise<Response>,
+          (_url, init) => init?.method === "PATCH",
+          (at) => {
+            bodyConsumedAt = at;
+          },
+        ),
+      );
+
+      render(createElement(Home));
+      await screen.findByText("Draft notes");
+
+      const checkbox = screen.getByRole("checkbox", { name: "Mark complete: Draft notes" });
+      fireEvent.click(checkbox);
+
+      await waitFor(() => expect(checkbox).toBeChecked());
+
+      expect(bodyConsumedAt).toBeGreaterThan(0);
+      const deltaMs = performance.now() - bodyConsumedAt;
+      if (deltaMs <= 300) withinBudget++;
+
+      if (i === 0) {
+        expect(innerFetch).toHaveBeenNthCalledWith(
+          2,
+          "/api/todos/1",
+          expect.objectContaining({
+            method: "PATCH",
+            body: JSON.stringify({ completed: true }),
+          }),
+        );
+        expect(screen.getByText("Draft notes")).toHaveClass("line-through");
+      }
+
+      cleanup();
+      vi.unstubAllGlobals();
+    }
+
+    expect(withinBudget).toBeGreaterThanOrEqual(95);
+  });
+
+  it("shows delete success DOM within 300ms after mutation body consumes in ≥95 of 100 runs", async () => {
+    const a = {
+      id: 1,
+      description: "Stay",
+      completed: false,
+      createdAt: "2026-04-30T00:00:01.000Z",
+    };
+    const b = {
+      id: 2,
+      description: "Go away",
+      completed: false,
+      createdAt: "2026-04-30T00:00:00.000Z",
+    };
+
+    let withinBudget = 0;
+
+    for (let i = 0; i < 100; i++) {
+      let bodyConsumedAt = 0;
+
+      const innerFetch = vi
+        .fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ data: [a, b] }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ data: { id: b.id } }),
+        });
+
+      vi.stubGlobal(
+        "fetch",
+        wrapFetchStampAfterMutationJson(
+          (...args) => innerFetch(...args) as Promise<Response>,
+          (_url, init) => init?.method === "DELETE",
+          (at) => {
+            bodyConsumedAt = at;
+          },
+        ),
+      );
+
+      render(createElement(Home));
+      await screen.findByText("Go away");
+
+      fireEvent.click(screen.getByRole("button", { name: "Delete todo: Go away" }));
+
+      await waitFor(() => expect(screen.queryByText("Go away")).not.toBeInTheDocument());
+
+      expect(bodyConsumedAt).toBeGreaterThan(0);
+      const deltaMs = performance.now() - bodyConsumedAt;
+      if (deltaMs <= 300) withinBudget++;
+
+      if (i === 0) {
+        expect(screen.getByText("Stay")).toBeInTheDocument();
+        expect(innerFetch).toHaveBeenNthCalledWith(
+          2,
+          "/api/todos/2",
+          expect.objectContaining({ method: "DELETE" }),
+        );
+      }
+
+      cleanup();
+      vi.unstubAllGlobals();
+    }
+
+    expect(withinBudget).toBeGreaterThanOrEqual(95);
   });
 });
